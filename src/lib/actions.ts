@@ -40,7 +40,7 @@ export async function saveMessages() {
     await db.chatMessage.createMany({
       data: messages,
     });
-    return `success:${new Date().getTime() - startTime}ms";
+    return `success:${new Date().getTime() - startTime}ms`;
   } catch (e) {
     console.error(e);
     return "failed";
