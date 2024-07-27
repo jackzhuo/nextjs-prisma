@@ -36,10 +36,11 @@ export async function saveMessages() {
     }
 
     console.log("start");
+    const startTime = new Date().getTime()
     await db.chatMessage.createMany({
       data: messages,
     });
-    return "success";
+    return `success:${new Date().getTime() - startTime}ms";
   } catch (e) {
     console.error(e);
     return "failed";
