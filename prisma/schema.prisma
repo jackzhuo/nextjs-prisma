@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid()) @db.VarChar(128)
+  chatId    String      @db.VarChar(128)
+  runId     String      @db.VarChar(128)
+  role      MessageRole @default(user)
+  content   String
+  createAt  DateTime    @default(now())
+  updatedAt DateTime    @default(now()) @updatedAt
+  msgId     String      @db.VarChar(128)
+  chat      Chat        @relation(fields: [chatId], references: [id])
+}
+
+model Chat {
+  id          String        @id @default(cuid()) @db.VarChar(128)
+  userId      String        @db.VarChar(128)
+  assistantId String        @db.VarChar(128)
+  isCurr      Boolean       @default(false)
+  isBackup    Boolean       @default(false)
+  title       String        @db.VarChar(128)
+  path        String        @db.VarChar(128)
+  sharePath   String?       @db.VarChar(128)
+  threadId    String
+  msgCount    Int?          @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @default(now()) @updatedAt
+  ChatMessage ChatMessage[]
+}
+
+model ActivateToken {
+  id        String   @id
+  account   String   @unique
+  code      String   @db.VarChar(32)
+  expiredAt DateTime
+}
+
+model Assistant {
+  id                String   @id @db.VarChar(128)
+  name              String   @db.VarChar(128)
+  desc              String   @db.VarChar(512)
+  image             String?
+  instruction       String
+  starters          String
+  sortNo            Int?     @default(10)
+  openaiAssistantId String
+  createAt          DateTime @default(now())
+  isPublish         Boolean  @default(false)
+  isShow            Boolean  @default(true)
+  model             String   @default("gpt-4o-mini") @db.VarChar(32)
+  responseFormat    String   @default("text") @db.VarChar(32)
+  temperature       Int      @default(1)
+  topP              Int      @default(1)
+  type              String   @default("assistant") @db.VarChar(32)
+  useCredits        Int      @default(-1)
+}
+
+model ChatRun {
+  id               String    @id @db.VarChar(128)
+  chatId           String    @db.VarChar(128)
+  assistantId      String    @db.VarChar(128)
+  promptTokens     Int
+  completionTokens Int
+  totalTokens      Int
+  createAt         DateTime? @default(now())
+  updatedAt        DateTime  @default(now())
+}
+
+model Favorite {
+  id          String   @id @db.VarChar(128)
+  userId      String   @db.VarChar(128)
+  assistantId String   @db.VarChar(128)
+  createAt    DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  User        User     @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id        String     @id
+  name      String?
+  phone     String?    @unique
+  email     String?    @unique @db.VarChar(128)
+  password  String?    @db.VarChar(128)
+  image     String?
+  bio       String?    @db.VarChar(512)
+  expiredAt DateTime?
+  active    Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  role      String     @default("user") @db.VarChar(32)
+  Favorite  Favorite[]
+}
+
+model tbl_charge_apply {
+  id            String   @id
+  fromUserId    String   @db.VarChar(128)
+  fromUserPhone String   @db.VarChar(32)
+  toUserId      String   @db.VarChar(128)
+  toUserPhone   String   @db.VarChar(32)
+  remarks       String   @db.VarChar(128)
+  status        String   @default("applying")
+  createAt      DateTime @default(now())
+  updateAt      DateTime @default(now())
+}
+
+model tbl_charge_credit_log {
+  id            String   @id
+  fromUserId    String   @db.VarChar(128)
+  fromUserPhone String   @db.VarChar(32)
+  toUserId      String   @db.VarChar(128)
+  toUserPhone   String   @db.VarChar(32)
+  credits       Int
+  chargeType    String   @default("transfer") @db.VarChar(32)
+  remarks       String?
+  createAt      DateTime @default(now())
+  updateAt      DateTime @default(now())
+}
+
+model tbl_charge_user {
+  id               String    @id
+  userId           String    @db.VarChar(128)
+  userPhone        String    @db.VarChar(32)
+  creditUserId     String    @db.VarChar(128)
+  creditUserPhone  String    @db.VarChar(32)
+  remarks          String    @default("") @db.VarChar(20)
+  totalCredits     Int       @default(0)
+  creditCount      Int       @default(0)
+  latestCreditDate DateTime?
+  status           String    @default("applying")
+  deleted          Boolean   @default(false)
+  createAt         DateTime  @default(now())
+  updateAt         DateTime  @default(now())
+}
+
+model tbl_user_credits {
+  userId       String   @id
+  credits      Int      @default(0)
+  totalCredits Int      @default(0)
+  createAt     DateTime @default(now())
+  updateAt     DateTime @default(now())
+}
+
+model tbl_user_events {
+  id        String   @id
+  userId    String   @db.VarChar(128)
+  userPhone String   @db.VarChar(128)
+  content   String   @db.VarChar(512)
+  eventType String   @db.VarChar(32)
+  refId     String?  @db.VarChar(128)
+  isNew     Boolean  @default(true)
+  remarks   String?  @db.VarChar(128)
+  createAt  DateTime @default(now())
+  updateAt  DateTime @default(now())
+}
+
+enum MessageRole {
+  user
+  assistant
+  system
+  function
+  data
+  tool
+}
+
+enum MessageType {
+  text
+  image
+}
