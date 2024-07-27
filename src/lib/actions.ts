@@ -2,13 +2,14 @@
 
 import { db } from "@/db";
 import { userMessage, botMessage } from "./data";
+import { nanoid } from "./utils";
 
 export async function saveMessages() {
   const chatId = "U1g04j3";
 
   const messages = [userMessage, botMessage].map((m) => {
     return {
-      id: m.id,
+      id: nanoid(),
       chatId: chatId,
       runId: m.runId || "",
       msgId: m.msgId || "",
